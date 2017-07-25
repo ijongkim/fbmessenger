@@ -93,7 +93,7 @@ function receivedMessage (event) {
     }
   } else if (messageText[0] === '/update') {
     data.message.text = 'Invalid item number'
-    let item = messageText.slice(1)
+    let item = messageText.slice(2)
     item = item.join(' ')
     if (messageText[1]) {
       let id = messageText[1].replace(/#/g, '')
