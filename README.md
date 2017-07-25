@@ -31,15 +31,14 @@ A Facebook Messenger Bot that allows you to create a list of pending tasks, mark
 ## Schema Design
 
 - Database has one table called `todo` with:
-  - id INT PRIMARY KEY
-  - user_id VARCHAR 250 NOT NULL
-  - created_timestamp TIMESTAMP DEFAULT now() NOT NULL
-  - last_updated TIMESTAMP DEFAULT now() NOT NULL
-  - item VARCHAR 250 NOT NULL
-  - completed BOOLEAN DEFAULT FALSE
+  - `id` INT PRIMARY KEY
+  - `user_id` VARCHAR 250 NOT NULL
+  - `created_timestamp` TIMESTAMP DEFAULT now() NOT NULL
+  - `last_updated` TIMESTAMP DEFAULT now() NOT NULL
+  - `item` VARCHAR 250 NOT NULL
+  - `completed` BOOLEAN DEFAULT FALSE
 
 ## To Do
-- Add delete and update functionality
 - Add ability to use tags, allowing user to filter by tags
 - Add search functionality
 - Implement NLP for more natural interaction
