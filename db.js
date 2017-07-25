@@ -169,11 +169,11 @@ function updateItem (recipient, id, item) {
     } else {
       db.none(`UPDATE todo SET item = '${item}' WHERE id = '${results[id].id}' AND user_id = '${recipient}' `)
       .then(results => {
-        data.message.text = `Item #${id + 1} deleted`
+        data.message.text = `Item #${id + 1} updated with ${item}`
         utils.sendResponse(data)
       })
       .catch(error => {
-        data.message.text = `Error deleting item: ${error.error}`
+        data.message.text = `Error updating item: ${error.error}`
         utils.sendResponse(data)
       })
     }

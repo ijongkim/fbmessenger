@@ -24,6 +24,8 @@ A Facebook Messenger Bot that allows you to create a list of pending tasks, mark
   - `/list` - Display your current list of tasks
   - `/add <task description>` - Add this task to your list
   - `/done <list id>` - Mark this item complete
+  - `/update <list id> <task description>` - Update this task with new task
+  - `/delete <list id>` - Delete this task from your list
   - `/completed` - Display your completed list of tasks
 
 ## Schema Design
