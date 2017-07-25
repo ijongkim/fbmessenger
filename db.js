@@ -18,7 +18,7 @@ function getList (recipient) {
     } else {
       let items = ['Your list of TODO items:']
       results.forEach(function (item, id) {
-        items.push(`#${id + 1} - ${item.item} (added on ${moment(item.created_timestamp).fromNow()})`)
+        items.push(`#${id + 1} - ${item.item} (added ${moment(item.created_timestamp).fromNow()})`)
       })
       items = items.join('\n')
       data.message.text = items
@@ -47,7 +47,7 @@ function getCompleted (recipient) {
     } else {
       let items = ['Your list of completed TODO items:']
       results.forEach(function (item, id) {
-        items.push(`${id + 1} - ${item.item} (completed on ${moment(item.last_updated).fromNow()})`)
+        items.push(`${id + 1} - ${item.item} (completed ${moment(item.last_updated).fromNow()})`)
       })
       items = items.join('\n')
       data.message.text = items
