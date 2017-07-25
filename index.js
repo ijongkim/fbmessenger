@@ -85,17 +85,28 @@ function displayList (recipient) {
       id: recipient
     },
     message: {
-      text: 'Here\'s your list'
+      text: 'Your list is empty'
     }
   }
-  db.manyOrNone(`SELECT FROM todo;`)
-  .then(data => {
-    console.log('data', data)
+  db.manyOrNone(`SELECT created_timestamp, item FROM todo WHERE user_id = '${recipient}' AND completed = 'f';`)
+  .then(results => {
+    if (results.length < 1) {
+      sendResponse(data)
+    } else {
+      let items = ['Your list of TODO items:']
+      results.forEach(function (item, id) {
+        items.push(`#${id} - ${item.item} (added on ${item.created_timestamp})`)
+      })
+      items = items.join('\n')
+      data.message.text = items
+      sendResponse(data)
+    }
+    console.log('data', results)
   })
   .catch(error => {
-    console.log('error', error)
+    data.message.text = `Error adding item to your list: ${error.error}`
+    sendResponse(data)
   })
-  sendResponse(data)
 }
 
 function displayCompleted (recipient) {
@@ -108,18 +119,18 @@ function addItem (recipient, item) {
       id: recipient
     },
     message: {
-      text: 'Added'
+      text: ''
     }
   }
-  console.log(recipient, item)
-  db.oneOrNone(`INSERT INTO todo (id, item) VALUES (${recipient}, '${item}');`)
-  .then(data => {
-    console.log('data', data)
+  db.oneOrNone(`INSERT INTO todo (user_id, item) VALUES (${recipient}, '${item}');`)
+  .then(results => {
+    data.message.text = `Added "${item}" to your list.`
+    sendResponse(data)
   })
   .catch(error => {
-    console.log('error', error)
+    data.message.text = `Error adding item to your list: ${error.error}`
+    sendResponse(data)
   })
-  sendResponse(data)
 }
 
 function doneItem (recipient, item) {
