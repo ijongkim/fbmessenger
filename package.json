@@ -1,0 +1,26 @@
+{
+  "name": "fbmessenger",
+  "version": "1.0.0",
+  "description": "Bot for Facebook's Messenger",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ijongkim/fbmessenger.git"
+  },
+  "author": "Innie Kim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ijongkim/fbmessenger/issues"
+  },
+  "homepage": "https://github.com/ijongkim/fbmessenger#readme",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "dotenv": "^4.0.0",
+    "express": "^4.15.3"
+  }
+}
