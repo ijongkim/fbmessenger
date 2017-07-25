@@ -47,6 +47,14 @@ function receivedMessage (event) {
   let senderID = event.sender.id
   let message = event.message
   let messageText = message.text.split(' ')
+  let data = {
+    recipient: {
+      id: senderID
+    },
+    message: {
+      text: ''
+    }
+  }
   if (messageText[0] === '/list') {
     db.getList(senderID)
   } else if (messageText[0] === '/add') {
@@ -54,14 +62,7 @@ function receivedMessage (event) {
     item = item.join(' ')
     db.addItem(senderID, item)
   } else if (messageText[0] === '/done') {
-    let data = {
-      recipient: {
-        id: senderID
-      },
-      message: {
-        text: 'Invalid item number'
-      }
-    }
+    data.message.text = 'Invalid item number'
     if (messageText[1]) {
       let id = messageText[1].replace(/#/g, '')
       id = id.replace(/[^0-9]/g, '')
@@ -75,19 +76,44 @@ function receivedMessage (event) {
     } else {
       utils.sendResponse(data)
     }
+  } else if (messageText[0] === '/delete') {
+    data.message.text = 'Invalid item number'
+    if (messageText[1]) {
+      let id = messageText[1].replace(/#/g, '')
+      id = id.replace(/[^0-9]/g, '')
+      if (id.length > 0) {
+        id = parseInt(id)
+        id--
+        db.deleteItem(senderID, id)
+      } else {
+        utils.sendResponse(data)
+      }
+    } else {
+      utils.sendResponse(data)
+    }
+  } else if (messageText[0] === '/update') {
+    data.message.text = 'Invalid item number'
+    let item = messageText.slice(1)
+    item = item.join(' ')
+    if (messageText[1]) {
+      let id = messageText[1].replace(/#/g, '')
+      id = id.replace(/[^0-9]/g, '')
+      if (id.length > 0) {
+        id = parseInt(id)
+        id--
+        db.updateItem(senderID, id, item)
+      } else {
+        utils.sendResponse(data)
+      }
+    } else {
+      utils.sendResponse(data)
+    }
   } else if (messageText[0] === '/completed') {
     db.getCompleted(senderID)
   } else if (messageText[0] === '/help') {
     utils.displayHelp(senderID)
   } else {
-    let data = {
-      recipient: {
-        id: senderID
-      },
-      message: {
-        text: `Hello! For a list of available commands type '/help'\n`
-      }
-    }
+    data.message.text = `Hello! For a list of available commands type '/help'\n`
     utils.sendResponse(data)
   }
 }

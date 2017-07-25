@@ -115,7 +115,79 @@ function doneItem (recipient, id) {
   })
 }
 
+function deleteItem (recipient, id) {
+  let data = {
+    recipient: {
+      id: recipient
+    },
+    message: {
+      text: 'No items to delete'
+    }
+  }
+  db.manyOrNone(`SELECT id, created_timestamp, item FROM todo WHERE user_id = '${recipient}' AND completed = 'f';`)
+  .then(results => {
+    if (results.length < 1) {
+      utils.sendResponse(data)
+    } else if (id > results.length) {
+      data.message.text = 'Invalid item number'
+      utils.sendResponse(data)
+    } else {
+      db.none(`DELETE FROM todo WHERE id = '${results[id].id}' AND user_id = '${recipient}' `)
+      .then(results => {
+        data.message.text = `Item #${id + 1} deleted`
+        utils.sendResponse(data)
+      })
+      .catch(error => {
+        data.message.text = `Error deleting item: ${error.error}`
+        utils.sendResponse(data)
+      })
+    }
+  })
+  .catch(error => {
+    console.log(error)
+    data.message.text = `Error retriving current tasks: ${error.error}`
+    utils.sendResponse(data)
+  })
+}
+
+function updateItem (recipient, id, item) {
+  let data = {
+    recipient: {
+      id: recipient
+    },
+    message: {
+      text: 'No items to update'
+    }
+  }
+  db.manyOrNone(`SELECT id, created_timestamp, item FROM todo WHERE user_id = '${recipient}' AND completed = 'f';`)
+  .then(results => {
+    if (results.length < 1) {
+      utils.sendResponse(data)
+    } else if (id > results.length) {
+      data.message.text = 'Invalid item number'
+      utils.sendResponse(data)
+    } else {
+      db.none(`UPDATE todo SET item = '${item}' WHERE id = '${results[id].id}' AND user_id = '${recipient}' `)
+      .then(results => {
+        data.message.text = `Item #${id + 1} deleted`
+        utils.sendResponse(data)
+      })
+      .catch(error => {
+        data.message.text = `Error deleting item: ${error.error}`
+        utils.sendResponse(data)
+      })
+    }
+  })
+  .catch(error => {
+    console.log(error)
+    data.message.text = `Error retriving current tasks: ${error.error}`
+    utils.sendResponse(data)
+  })
+}
+
 module.exports.getList = getList
 module.exports.getCompleted = getCompleted
 module.exports.addItem = addItem
 module.exports.doneItem = doneItem
+module.exports.deleteItem = deleteItem
+module.exports.updateItem = updateItem
