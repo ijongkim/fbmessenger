@@ -3,6 +3,10 @@ const app = express()
 const dotenv = require('dotenv').config()
 const bodyParser = require('body-parser')
 const request = require('request')
+const promise = require('bluebird')
+const options = { promiseLib: promise }
+const pgp = require('pg-promise')(options)
+let db = pgp(process.env.DB_URL)
 
 app.use(bodyParser.json())
 
@@ -51,7 +55,9 @@ function receivedMessage (event) {
   if (messageText[0] === '/list') {
     displayList(senderID)
   } else if (messageText[0] === '/add') {
-    addItem(senderID)
+    let item = messageText.slice(1)
+    item = item.join(' ')
+    addItem(senderID, item)
   } else if (messageText[0] === '/done') {
     doneItem(senderID)
   } else if (messageText[0] === '/completed') {
@@ -82,6 +88,13 @@ function displayList (recipient) {
       text: 'Here\'s your list'
     }
   }
+  db.manyOrNone(`SELECT FROM todo;`)
+  .then(data => {
+    console.log('data', data)
+  })
+  .catch(error => {
+    console.log('error', error)
+  })
   sendResponse(data)
 }
 
@@ -89,11 +102,27 @@ function displayCompleted (recipient) {
   console.log('Completed list')
 }
 
-function addItem (recipient) {
-  console.log('Adding')
+function addItem (recipient, item) {
+  let data = {
+    recipient: {
+      id: recipient
+    },
+    message: {
+      text: 'Added'
+    }
+  }
+  console.log(recipient, item)
+  db.oneOrNone(`INSERT INTO todo (id, item) VALUES (${recipient}, '${item}');`)
+  .then(data => {
+    console.log('data', data)
+  })
+  .catch(error => {
+    console.log('error', error)
+  })
+  sendResponse(data)
 }
 
-function doneItem (recipient) {
+function doneItem (recipient, item) {
   console.log('Done')
 }
 
