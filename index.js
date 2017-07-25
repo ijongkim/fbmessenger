@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const dotenv = require('dotenv').config()
 const bodyParser = require('body-parser')
+const request = require('request')
 
 app.use(bodyParser.json())
 
@@ -30,7 +31,7 @@ app.post('/fbmessenger', function (req, res) {
         if (event.message) {
           receivedMessage(event)
         } else {
-          console.log('Webhook received unknown event:', event)
+          // console.log('Webhook received unknown event:', event)
         }
       })
     })
@@ -48,36 +49,69 @@ function receivedMessage (event) {
   let messageText = message.text.split(' ')
   let messageAttachments = message.attachments
   if (messageText[0] === '/list') {
-    displayList(event)
+    displayList(senderID)
   } else if (messageText[0] === '/add') {
-    addItem(event)
+    addItem(senderID)
   } else if (messageText[0] === '/done') {
-    doneItem(event)
+    doneItem(senderID)
   } else if (messageText[0] === '/completed') {
-    displayCompleted(event)
+    displayCompleted(senderID)
   } else {
-    displayHelp(event)
+    displayHelp(senderID)
   }
 }
 
-function displayHelp (event) {
-  console.log('You can use these commands')
+function displayHelp (recipient) {
+  let data = {
+    recipient: {
+      id: recipient
+    },
+    message: {
+      text: `Here's your available commands:\n/help - Displays this list of commands\n/list - Displays your remaining tasks\n/add - Adds item to TODO list (ex: /add Buy Milk)\n/done - Marks an item complete by item number (ex: /done #1)\n/completed - Displays your completed tasks`
+    }
+  }
+  sendResponse(data)
 }
 
-function displayList (event) {
-  console.log('Here\'s your list')
+function displayList (recipient) {
+  let data = {
+    recipient: {
+      id: recipient
+    },
+    message: {
+      text: 'Here\'s your list'
+    }
+  }
+  sendResponse(data)
 }
 
-function displayCompleted (event) {
+function displayCompleted (recipient) {
   console.log('Completed list')
 }
 
-function addItem (event) {
+function addItem (recipient) {
   console.log('Adding')
 }
 
-function doneItem (event) {
+function doneItem (recipient) {
   console.log('Done')
+}
+
+function sendResponse (messageData) {
+  request({
+    uri: 'https://graph.facebook.com/v2.6/me/messages',
+    qs: {
+      access_token: process.env.PAGE_TOKEN
+    },
+    method: 'POST',
+    json: messageData
+  }, function (error, response, body) {
+    if (!error) {
+      console.log('Response sent')
+    } else {
+      console.log('Unable to send message:', response.statusCode, error)
+    }
+  })
 }
 
 app.listen(process.env.PORT, function () {
