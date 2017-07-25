@@ -1,6 +1,18 @@
 const request = require('request')
 
-module.exports = (messageData) => {
+function displayHelp (recipient) {
+  let data = {
+    recipient: {
+      id: recipient
+    },
+    message: {
+      text: `Here's your available commands:\n/help - Displays this list of commands\n/list - Displays your remaining tasks\n/add - Adds item to TODO list (ex: /add Buy Milk)\n/done - Marks an item complete by item number (ex: /done #1)\n/completed - Displays your completed tasks`
+    }
+  }
+  sendResponse(data)
+}
+
+function sendResponse (messageData) {
   request({
     uri: 'https://graph.facebook.com/v2.6/me/messages',
     qs: {
@@ -16,3 +28,6 @@ module.exports = (messageData) => {
     }
   })
 }
+
+module.exports.displayHelp = displayHelp
+module.exports.sendResponse = sendResponse
