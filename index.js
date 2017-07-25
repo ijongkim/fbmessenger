@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const dotenv = require('dotenv').config()
 const bodyParser = require('body-parser')
+const moment = require('moment')
 const request = require('request')
 const promise = require('bluebird')
 const options = { promiseLib: promise }
@@ -29,8 +30,6 @@ app.post('/fbmessenger', function (req, res) {
   let data = req.body
   if (data.object === 'page') {
     data.entry.forEach(function (entry) {
-      let pageID = entry.id
-      let timeOfEvent = entry.time
       entry.messaging.forEach(function (event) {
         if (event.message) {
           receivedMessage(event)
@@ -59,11 +58,41 @@ function receivedMessage (event) {
     item = item.join(' ')
     addItem(senderID, item)
   } else if (messageText[0] === '/done') {
-    doneItem(senderID)
+    let data = {
+      recipient: {
+        id: senderID
+      },
+      message: {
+        text: 'Invalid item number'
+      }
+    }
+    if (messageText[1]) {
+      let id = messageText[1].replace(/#/g, '')
+      id = id.replace(/[^0-9]/g, '')
+      if (id.length > 0) {
+        id = parseInt(id)
+        id--
+        doneItem(senderID, id)
+      } else {
+        sendResponse(data)
+      }
+    } else {
+      sendResponse(data)
+    }
   } else if (messageText[0] === '/completed') {
     displayCompleted(senderID)
-  } else {
+  } else if (messageText[0] === '/help') {
     displayHelp(senderID)
+  } else {
+    let data = {
+      recipient: {
+        id: senderID
+      },
+      message: {
+        text: `Hello! For a list of available commands type '/help'\n`
+      }
+    }
+    sendResponse(data)
   }
 }
 
@@ -95,22 +124,46 @@ function displayList (recipient) {
     } else {
       let items = ['Your list of TODO items:']
       results.forEach(function (item, id) {
-        items.push(`#${id} - ${item.item} (added on ${item.created_timestamp})`)
+        items.push(`#${id + 1} - ${item.item} (added on ${moment(item.created_timestamp).fromNow()})`)
       })
       items = items.join('\n')
       data.message.text = items
       sendResponse(data)
     }
-    console.log('data', results)
   })
   .catch(error => {
-    data.message.text = `Error adding item to your list: ${error.error}`
+    data.message.text = `Error diplaying your list: ${error.error}`
     sendResponse(data)
   })
 }
 
 function displayCompleted (recipient) {
-  console.log('Completed list')
+  let data = {
+    recipient: {
+      id: recipient
+    },
+    message: {
+      text: 'Your completed list is empty'
+    }
+  }
+  db.manyOrNone(`SELECT last_updated, item FROM todo WHERE user_id = '${recipient}' AND completed = 't';`)
+  .then(results => {
+    if (results.length < 1) {
+      sendResponse(data)
+    } else {
+      let items = ['Your list of completed TODO items:']
+      results.forEach(function (item, id) {
+        items.push(`${id + 1} - ${item.item} (completed on ${moment(item.last_updated).fromNow()})`)
+      })
+      items = items.join('\n')
+      data.message.text = items
+      sendResponse(data)
+    }
+  })
+  .catch(error => {
+    data.message.text = `Error diplaying your list: ${error.error}`
+    sendResponse(data)
+  })
 }
 
 function addItem (recipient, item) {
@@ -133,8 +186,39 @@ function addItem (recipient, item) {
   })
 }
 
-function doneItem (recipient, item) {
-  console.log('Done')
+function doneItem (recipient, id) {
+  let data = {
+    recipient: {
+      id: recipient
+    },
+    message: {
+      text: 'No items to mark completed'
+    }
+  }
+  db.manyOrNone(`SELECT id, created_timestamp, item FROM todo WHERE user_id = '${recipient}' AND completed = 'f';`)
+  .then(results => {
+    if (results.length < 1) {
+      sendResponse(data)
+    } else if (id > results.length) {
+      data.message.text = 'Invalid item number'
+      sendResponse(data)
+    } else {
+      db.none(`UPDATE todo SET last_updated = now(), completed = 't' WHERE id = '${results[id].id}' AND user_id = '${recipient}' `)
+      .then(results => {
+        data.message.text = `Item #${id + 1} marked complete`
+        sendResponse(data)
+      })
+      .catch(error => {
+        data.message.text = `Error marking item complete: ${error.error}`
+        sendResponse(data)
+      })
+    }
+  })
+  .catch(error => {
+    console.log(error)
+    data.message.text = `Error retriving completed tasks: ${error.error}`
+    sendResponse(data)
+  })
 }
 
 function sendResponse (messageData) {
